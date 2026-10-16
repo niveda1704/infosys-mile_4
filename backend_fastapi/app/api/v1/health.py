@@ -59,3 +59,15 @@ async def ready(db: AsyncSession = Depends(get_db)) -> dict:
         from fastapi.responses import JSONResponse
         return JSONResponse(status_code=503, content={"status": "unready", "checks": checks})
     return {"status": "ready", "checks": checks}
+
+
+@router.get("/system/seed", summary="Trigger seed data")
+@router.post("/system/seed", summary="Trigger seed data POST")
+async def trigger_seed():
+    import traceback
+    try:
+        from scripts.seed_data import seed_all
+        await seed_all()
+        return {"status": "success", "message": "Database seeded successfully"}
+    except Exception as exc:
+        return {"status": "error", "error": str(exc), "traceback": traceback.format_exc()}

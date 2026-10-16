@@ -103,6 +103,16 @@ async def undo_last_swipe(
     response_model=Page[SavedJobResponse],
     summary="My saved jobs (job seeker)",
 )
+@router.get(
+    "/jobs/saved",
+    response_model=Page[SavedJobResponse],
+    summary="My saved jobs alias",
+)
+@router.get(
+    "/saved",
+    response_model=Page[SavedJobResponse],
+    summary="My saved jobs alias 2",
+)
 async def list_saved_jobs(
     user: Annotated[User, Depends(require_job_seeker)],
     db: AsyncSession = Depends(get_db),

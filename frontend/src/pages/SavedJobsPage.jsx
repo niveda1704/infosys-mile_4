@@ -159,7 +159,8 @@ export function SavedJobsPage() {
         const jobs =
           savedResponse?.saved_jobs ||
           savedResponse?.jobs ||
-          [];
+          savedResponse?.items ||
+          (Array.isArray(savedResponse) ? savedResponse : []);
 
         setSavedJobs(
           Array.isArray(jobs)

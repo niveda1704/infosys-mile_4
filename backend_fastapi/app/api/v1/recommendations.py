@@ -22,6 +22,16 @@ router = APIRouter(tags=["recommendations"])
     response_model=list[RecommendationItem],
     summary="Personalized job recommendations",
 )
+@router.get(
+    "/ai/recommendations",
+    response_model=list[RecommendationItem],
+    summary="Personalized job recommendations alias",
+)
+@router.get(
+    "/ai/deck",
+    response_model=list[RecommendationItem],
+    summary="Swipe deck recommendations alias",
+)
 async def get_recommendations(
     user: Annotated[User, Depends(require_role(UserRole.job_seeker, UserRole.admin))],
     db: Annotated[AsyncSession, Depends(get_db)],

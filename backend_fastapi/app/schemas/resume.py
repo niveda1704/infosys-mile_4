@@ -52,6 +52,10 @@ class ResumeUploadResponse(BaseModel):
     version_id: str
     version_number: int
     parse_status: ParseStatus
+    skills: list[str] = Field(default_factory=list)
+    parsed_skills: list[str] = Field(default_factory=list)
+    resume: dict = Field(default_factory=dict)
+
 
 
 class ResumeParseResponse(BaseModel):

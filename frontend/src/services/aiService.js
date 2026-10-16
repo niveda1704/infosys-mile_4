@@ -17,13 +17,20 @@ export const aiService = {
       headers: { "Content-Type": "multipart/form-data" },
       timeout: 120000,
     });
-    const resume = data.resume || {};
+    const resumeId = data.resume_id || data.id || data.resume?.id || data.resume?.external_resume_id;
+    const skills = data.skills || data.parsed_skills || data.resume?.skills || [];
+    const resume = data.resume || {
+      id: resumeId,
+      external_resume_id: resumeId,
+      skills,
+    };
     return {
       ...data,
       resume,
-      db_id: resume.id,
-      resume_id: resume.external_resume_id || resume.id,
-      parsed_skills: resume.skills || [],
+      db_id: resumeId,
+      resume_id: resumeId,
+      version_id: data.version_id,
+      parsed_skills: skills,
     };
   },
 
@@ -34,8 +41,13 @@ export const aiService = {
 
   // Job-agnostic ATS analysis of one resume (uuid or numeric id)
   getResumeAnalysis: async (resumeRef, mode = "hybrid") => {
-    const { data } = await http.get(`/ai/resume/${resumeRef}/analysis`, { params: { mode } });
-    return data;
+    try {
+      const { data } = await http.get(`/ai/resume/${resumeRef}/analysis`, { params: { mode } });
+      return data;
+    } catch {
+      const { data } = await http.get(`/resumes/${resumeRef}/analysis`, { params: { mode } });
+      return data;
+    }
   },
 
   // ATS score of a stored resume (numeric db id) against one job
@@ -50,16 +62,28 @@ export const aiService = {
 
   // ---------------------------------------------------------------- recommendations
   getRecommendations: async ({ mode = "hybrid", limit = 50, excludeSeen = false } = {}) => {
-    const { data } = await http.get("/ai/recommendations", {
-      params: { mode, limit, exclude_seen: excludeSeen },
-    });
-    return data;
+    try {
+      const { data } = await http.get("/ai/recommendations", {
+        params: { mode, limit, exclude_seen: excludeSeen },
+      });
+      return data;
+    } catch {
+      const { data } = await http.get("/recommendations", {
+        params: { mode, limit, exclude_seen: excludeSeen },
+      });
+      return data;
+    }
   },
 
   // Re-ranked swipe deck (unseen jobs, best first). Call again after every swipe.
   getDeck: async ({ mode = "hybrid", limit = 40, timeout = 6000 } = {}) => {
-    const { data } = await http.get("/ai/deck", { params: { mode, limit }, timeout });
-    return data;
+    try {
+      const { data } = await http.get("/ai/deck", { params: { mode, limit }, timeout });
+      return data;
+    } catch {
+      const { data } = await http.get("/recommendations", { params: { limit }, timeout });
+      return data;
+    }
   },
 
   getEngineInfo: async () => {

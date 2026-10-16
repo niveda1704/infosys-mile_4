@@ -168,7 +168,8 @@ export function ApplicationsPage() {
 
         const backendApplications =
           response?.applications ||
-          [];
+          response?.items ||
+          (Array.isArray(response) ? response : []);
 
         const normalizedApplications =
           Array.isArray(

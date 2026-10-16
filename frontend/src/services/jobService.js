@@ -90,13 +90,15 @@ export const jobService = {
   // ==========================================================
 
   getRecruiterJobs: async () => {
-
-    const response =
-      await jobApi.get(
-        "/jobs/my-jobs"
-      );
-
-    return response.data;
+    try {
+      const response = await jobApi.get("/jobs/my-jobs");
+      const list = response.data?.items || response.data?.jobs || (Array.isArray(response.data) ? response.data : []);
+      return { ...response.data, items: list, jobs: list };
+    } catch {
+      const response = await jobApi.get("/jobs/mine");
+      const list = response.data?.items || response.data?.jobs || (Array.isArray(response.data) ? response.data : []);
+      return { ...response.data, items: list, jobs: list };
+    }
   },
 
 
@@ -229,13 +231,15 @@ export const jobService = {
 
 
   getSavedJobs: async () => {
-
-    const response =
-      await jobApi.get(
-        "/jobs/saved"
-      );
-
-    return response.data;
+    try {
+      const response = await jobApi.get("/jobs/saved");
+      const list = response.data?.saved_jobs || response.data?.jobs || response.data?.items || (Array.isArray(response.data) ? response.data : []);
+      return { ...response.data, saved_jobs: list, jobs: list, items: list };
+    } catch {
+      const response = await jobApi.get("/saved-jobs");
+      const list = response.data?.saved_jobs || response.data?.jobs || response.data?.items || (Array.isArray(response.data) ? response.data : []);
+      return { ...response.data, saved_jobs: list, jobs: list, items: list };
+    }
   },
 
 
@@ -259,13 +263,15 @@ export const jobService = {
 
 
   getApplications: async () => {
-
-    const response =
-      await jobApi.get(
-        "/jobs/applications"
-      );
-
-    return response.data;
+    try {
+      const response = await jobApi.get("/jobs/applications");
+      const list = response.data?.applications || response.data?.items || (Array.isArray(response.data) ? response.data : []);
+      return { ...response.data, applications: list, items: list };
+    } catch {
+      const response = await jobApi.get("/applications");
+      const list = response.data?.applications || response.data?.items || (Array.isArray(response.data) ? response.data : []);
+      return { ...response.data, applications: list, items: list };
+    }
   },
 
 

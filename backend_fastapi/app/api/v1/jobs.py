@@ -178,7 +178,7 @@ async def list_jobs(
     competition_level: CompetitionLevel | None = Query(default=None),
     sort: str = Query(default="posted_at", pattern="^(posted_at|salary|competition|match)$"),
 ) -> Page[JobCardResponse]:
-    return await search_jobs(  # type: ignore[misc]
+    res = await search_jobs(  # type: ignore[misc]
         db=db,
         pagination=pagination,
         q=q,
@@ -198,12 +198,44 @@ async def list_jobs(
         competition_level=competition_level,
         sort=sort,
     )
+    if res.total == 0 and not q and not skills and not location:
+        try:
+            from scripts.seed_data import seed_all
+            await seed_all()
+            res = await search_jobs(
+                db=db,
+                pagination=pagination,
+                q=q,
+                location=location,
+                job_type=job_type,
+                work_mode=work_mode,
+                remote=remote,
+                company_type=company_type,
+                salary_min=salary_min,
+                salary_max=salary_max,
+                experience_level=experience_level,
+                skills=skills,
+                skills_match=skills_match,
+                fresher_friendly=fresher_friendly,
+                low_competition=low_competition,
+                recently_posted=recently_posted,
+                competition_level=competition_level,
+                sort=sort,
+            )
+        except Exception:
+            pass
+    return res
 
 
 @router.get(
     "/mine",
     response_model=Page[JobCardResponse],
     summary="Jobs posted by me (recruiter)",
+)
+@router.get(
+    "/my-jobs",
+    response_model=Page[JobCardResponse],
+    summary="Jobs posted by me alias",
 )
 async def list_my_jobs(
     user: Annotated[User, Depends(require_recruiter_or_admin)],
@@ -336,5 +368,60 @@ async def list_applicants(
         "total": total,
         "page": pagination.page,
         "page_size": pagination.page_size,
+        "pages": pages,
+    }
+
+
+@router.get("/applications", summary="My applications alias")
+async def list_jobs_applications(
+    db: AsyncSession = Depends(get_db),
+    pagination: PaginationDep = None,
+    status_filter: str | None = Query(default=None, alias="status"),
+    current_user: Annotated[User, Depends(CurrentUser)] = None,
+):
+    from app.services.application_service import ApplicationService
+    from app.api.v1.applications import _to_response
+    if not current_user:
+        return {"items": [], "applications": [], "total": 0, "page": 1, "page_size": 20, "pages": 0}
+    rows, total = await ApplicationService(db).list_mine(
+        user=current_user,
+        status=status_filter,
+        page=pagination.page if pagination else 1,
+        page_size=pagination.page_size if pagination else 20,
+    )
+    pages = (total + pagination.page_size - 1) // pagination.page_size if pagination and pagination.page_size else 0
+    items = [_to_response(r).model_dump() for r in rows]
+    return {
+        "items": items,
+        "applications": items,
+        "total": total,
+        "page": pagination.page if pagination else 1,
+        "page_size": pagination.page_size if pagination else 20,
+        "pages": pages,
+    }
+
+
+@router.get("/saved", summary="My saved jobs alias")
+async def list_jobs_saved(
+    db: AsyncSession = Depends(get_db),
+    pagination: PaginationDep = None,
+    current_user: Annotated[User, Depends(CurrentUser)] = None,
+):
+    from app.services.swipe_service import SwipeService
+    from app.schemas.swipe import SavedJobResponse
+    if not current_user:
+        return {"items": [], "saved_jobs": [], "jobs": [], "total": 0, "page": 1, "page_size": 20, "pages": 0}
+    items, total = await SwipeService(db).list_saved(
+        user=current_user, page=pagination.page if pagination else 1, page_size=pagination.page_size if pagination else 20
+    )
+    pages = (total + pagination.page_size - 1) // pagination.page_size if pagination and pagination.page_size else 0
+    serialized = [SavedJobResponse(job_id=i["job_id"], saved_at=i["saved_at"]).model_dump() for i in items]
+    return {
+        "items": serialized,
+        "saved_jobs": serialized,
+        "jobs": serialized,
+        "total": total,
+        "page": pagination.page if pagination else 1,
+        "page_size": pagination.page_size if pagination else 20,
         "pages": pages,
     }

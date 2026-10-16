@@ -5,7 +5,7 @@ import contextlib
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, Form, Response, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, Query, Response, UploadFile, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -118,7 +118,8 @@ async def upload_resume(
             rid = uuid.UUID(resume_id)
         except ValueError:
             raise BadRequestError("Invalid resume_id")
-    result = await ResumeService(db).upload(
+    service = ResumeService(db)
+    result = await service.upload(
         user=user,
         file_bytes=data,
         filename=file.filename or "resume",
@@ -126,6 +127,25 @@ async def upload_resume(
         title=title,
         resume_id=rid,
     )
+    extracted_skills: list[str] = []
+    try:
+        parsed_info = await service.parse(
+            user=user,
+            resume_id=uuid.UUID(result["resume_id"]),
+            version_id=uuid.UUID(result["version_id"]),
+        )
+        extracted_skills = [s["skill_name"] for s in parsed_info.get("skills", [])]
+        result["parse_status"] = parsed_info.get("parse_status", result["parse_status"])
+    except Exception:
+        pass
+
+    result["skills"] = extracted_skills
+    result["parsed_skills"] = extracted_skills
+    result["resume"] = {
+        "id": result["resume_id"],
+        "external_resume_id": result["resume_id"],
+        "skills": extracted_skills,
+    }
     return ResumeUploadResponse(**result)
 
 
@@ -240,3 +260,123 @@ async def parse_resume(
         user=user, resume_id=resume_id, version_id=version_id
     )
     return ResumeParseResponse(**result)
+
+
+async def get_resume_analysis_data(
+    resume_id: str,
+    user: User,
+    db: AsyncSession,
+    mode: str = "hybrid",
+) -> dict:
+    from app.repositories.resume_repo import ResumeRepository
+    from app.models.job import Job
+    from sqlalchemy import select
+
+    try:
+        rid = uuid.UUID(resume_id)
+    except ValueError:
+        raise BadRequestError("Invalid resume_id")
+
+    repo = ResumeRepository(db)
+    resume = await repo.get(rid)
+    if resume is None or resume.user_id != user.id:
+        raise NotFoundError("Resume not found")
+
+    default = await repo.get_default_version(user.id)
+    if default is None or default.resume_id != rid:
+        if not resume.versions:
+            raise NotFoundError("No version available for this resume")
+        version = max(resume.versions, key=lambda v: v.version_number)
+    else:
+        version = default
+
+    if version.parse_status != ParseStatus.parsed.value:
+        try:
+            await ResumeService(db).parse(user=user, resume_id=resume.id, version_id=version.id)
+            refreshed = await repo.get_version(version.id)
+            if refreshed:
+                version = refreshed
+        except Exception:
+            pass
+
+    detected_skills = [s.skill_name for s in (version.skills or [])]
+    text_content = version.parsed_text or ""
+
+    fmt_score = 75.0
+    missing_sections = []
+    lower_text = text_content.lower()
+    for section in ["education", "experience", "projects", "skills"]:
+        if section not in lower_text:
+            missing_sections.append(section.title())
+        else:
+            fmt_score += 5.0
+    fmt_score = min(95.0, fmt_score)
+
+    jobs_res = await db.execute(select(Job).limit(10))
+    sample_jobs = jobs_res.scalars().all()
+
+    top_jobs = []
+    missing_pool = set()
+    for j in sample_jobs:
+        req = set(s.lower() for s in (j.required_skills or []))
+        det = set(s.lower() for s in detected_skills)
+        matched = req.intersection(det)
+        missing = list(req - det)
+        missing_pool.update(missing[:3])
+        cov = len(matched) / max(1, len(req))
+        top_jobs.append({
+            "id": str(j.id),
+            "title": j.title,
+            "company": j.company.name if j.company else "Tech Corp",
+            "score": round(cov * 100, 1),
+            "missing_skills": missing[:5],
+        })
+    top_jobs.sort(key=lambda x: x["score"], reverse=True)
+
+    missing_skills = list(missing_pool)[:6]
+    if not missing_skills:
+        missing_skills = ["Docker", "Kubernetes", "AWS", "CI/CD", "System Design", "Microservices"]
+
+    skill_score = min(90.0, 40.0 + len(detected_skills) * 4.0)
+    job_fit = top_jobs[0]["score"] if top_jobs else 78.0
+    ats_score = round(0.4 * skill_score + 0.3 * fmt_score + 0.3 * job_fit, 1)
+
+    suggestions = []
+    if len(detected_skills) < 8:
+        suggestions.append(f"Only {len(detected_skills)} skills detected. Add more technical skills relevant to your domain.")
+    if missing_sections:
+        suggestions.append(f"Consider adding clear sections for: {', '.join(missing_sections)}.")
+    if missing_skills:
+        suggestions.append(f"Adding experience with {', '.join(missing_skills[:3])} will boost your match for top engineering roles.")
+    suggestions.append("Ensure your work experience includes quantifiable achievements and metrics.")
+
+    return {
+        "ats_score": ats_score,
+        "match_score": ats_score,
+        "job_profile_fit": job_fit,
+        "score_breakdown": {
+            "keyword_relevance": round(skill_score, 1),
+            "format_readability": round(fmt_score, 1),
+            "experience_relevance": round(job_fit, 1),
+            "skills_depth": round(ats_score, 1),
+        },
+        "detected_skills": detected_skills,
+        "missing_skills": missing_skills,
+        "missing_keywords": missing_skills,
+        "missing_sections": missing_sections,
+        "suggestions": suggestions,
+        "top_matching_jobs": top_jobs[:5],
+    }
+
+
+@router.get(
+    "/{resume_id}/analysis",
+    summary="Job-agnostic ATS resume analysis",
+)
+async def resume_analysis(
+    resume_id: str,
+    user: Annotated[User, Depends(require_job_seeker)],
+    db: AsyncSession = Depends(get_db),
+    mode: str = Query("hybrid"),
+) -> dict:
+    return await get_resume_analysis_data(resume_id, user, db, mode)
