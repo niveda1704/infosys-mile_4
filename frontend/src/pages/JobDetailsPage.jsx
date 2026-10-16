@@ -504,7 +504,7 @@ function MetaCard({
         </span>
       </div>
 
-      <p className="text-sm font-bold text-slate-900 dark:text-zinc-50 break-words">
+      <p className="text-sm font-bold text-slate-900 dark:text-zinc-50 wrap-break-word">
         {value}
       </p>
 
@@ -531,7 +531,7 @@ function SummaryRow({
           {label}
         </p>
 
-        <p className="font-semibold text-slate-800 dark:text-zinc-100 break-words">
+        <p className="font-semibold text-slate-800 dark:text-zinc-100 wrap-break-word">
           {value}
         </p>
       </div>

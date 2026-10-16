@@ -1115,7 +1115,7 @@ export function DiscoverPage() {
         ====================================================== */}
 
         {isLoading && (
-          <div className="flex-1 flex flex-col justify-center items-center w-full min-h-[460px] max-h-[640px] bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200/80 dark:border-zinc-800/80 shadow-sm p-8">
+          <div className="flex-1 flex flex-col justify-center items-center w-full min-h-115 max-h-160 bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200/80 dark:border-zinc-800/80 shadow-sm p-8">
 
             <Loader2 className="w-8 h-8 text-brand-600 dark:text-brand-400 animate-spin mb-3" />
 
@@ -1135,7 +1135,7 @@ export function DiscoverPage() {
         ====================================================== */}
 
         {!isLoading && error && (
-          <div className="flex-1 flex flex-col items-center justify-center min-h-[460px] bg-white dark:bg-zinc-900 rounded-3xl border border-rose-100 dark:border-rose-500/20 shadow-sm p-6 text-center">
+          <div className="flex-1 flex flex-col items-center justify-center min-h-115 bg-white dark:bg-zinc-900 rounded-3xl border border-rose-100 dark:border-rose-500/20 shadow-sm p-6 text-center">
 
             <div className="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-3">
               <AlertCircle className="w-6 h-6" />
@@ -1195,7 +1195,7 @@ export function DiscoverPage() {
                       CARD STACK
                   ================================================= */}
 
-                  <div className="relative w-full max-w-xl h-[min(65vh,580px)] min-h-[480px]">
+                  <div className="relative w-full max-w-xl h-[min(65vh,580px)] min-h-120">
 
                     <AnimatePresence mode="popLayout">
 
@@ -1302,7 +1302,7 @@ export function DiscoverPage() {
                    EMPTY STATE
                    ================================================== */
 
-                <div className="flex flex-col items-center justify-center w-full max-w-lg min-h-[460px] bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200/80 dark:border-zinc-800/80 shadow-sm p-8 text-center">
+                <div className="flex flex-col items-center justify-center w-full max-w-lg min-h-115 bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200/80 dark:border-zinc-800/80 shadow-sm p-8 text-center">
 
                   <div className="w-14 h-14 rounded-2xl bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center mb-3">
                     <Inbox className="w-7 h-7" />
