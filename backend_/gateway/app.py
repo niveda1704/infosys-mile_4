@@ -4,6 +4,22 @@ from flasgger import Swagger
 
 app = Flask(__name__)
 
+@app.after_request
+def add_cors_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With"
+    return response
+
+@app.route("/", methods=["GET"])
+def root_index():
+    return {
+        "status": "ok",
+        "app": "SwipeX API Gateway",
+        "version": "2.0.0",
+        "documentation": "/apidocs/"
+    }, 200
+
 SERVICES = {
     "auth": "http://127.0.0.1:5001",
     "jobs": "http://127.0.0.1:5002",
