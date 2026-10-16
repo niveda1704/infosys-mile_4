@@ -516,7 +516,7 @@ export function SavedJobsPage() {
 
                 <div
                   key={item}
-                  className="bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200 dark:border-zinc-800 p-6 h-[330px] animate-pulse"
+                  className="bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200 dark:border-zinc-800 p-6 h-82.5 animate-pulse"
                 >
 
                   <div className="flex gap-3 mb-5">
