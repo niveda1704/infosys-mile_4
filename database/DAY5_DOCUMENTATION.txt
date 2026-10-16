@@ -1,0 +1,91 @@
+SWIPEX API - DAY 5 DOCUMENTATION
+
+1. JOB SERVICE ENDPOINTS
+
+Get all jobs:
+GET /jobs
+
+Get a specific job:
+GET /jobs/{job_id}
+
+Search jobs:
+GET /jobs/filter/search
+
+Available filters:
+location
+remote
+job_type
+
+
+2. SWIPE SERVICE ENDPOINTS
+
+Save a swipe:
+POST /swipe
+
+Example:
+
+{
+    "user_id": 1,
+    "job_id": 11,
+    "direction": "right"
+}
+
+
+Get user swipe history:
+GET /swipes/{user_id}
+
+
+3. DATA FOR RECOMMENDATION SYSTEM
+
+Job data includes:
+
+job_id
+job_title
+job_description
+location
+job_type
+remote
+salary_min
+salary_max
+experience_level
+
+
+Swipe data includes:
+
+swipe_id
+user_id
+job_id
+direction
+swiped_at
+
+
+4. RECOMMENDATION SYSTEM
+
+Intern 3 can use the swipe data
+to understand user preferences.
+
+RIGHT swipe means:
+The user is interested in the job.
+
+LEFT swipe means:
+The user is not interested in the job.
+
+The recommendation system can analyze:
+
+Job titles
+Locations
+Remote preferences
+Job types
+Experience levels
+
+
+5. API BASE URL
+
+http://127.0.0.1:8000
+
+
+6. API DOCUMENTATION
+
+Swagger UI:
+
+http://127.0.0.1:8000/docs

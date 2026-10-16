@@ -1,0 +1,6 @@
+{
+  "name": "SwipeX",
+  "description": "Swipe-Based Intelligent Job Discovery and Career Assistance Platform",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER"]
+}

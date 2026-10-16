@@ -1,0 +1,13 @@
+# secrets never go to Git (SRS: environment-based secrets)
+.env
+.env.*
+!.env.example
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+node_modules/
+dist/
+__pycache__/
+*.pyc
+backend_jayashree/services/*/uploads/
+backend_jayashree/services/*/instance/

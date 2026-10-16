@@ -1,0 +1,132 @@
+"""
+Heuristic ATS Score module for SwipeX Intern 3 AI/ML Career Intelligence Service.
+Calculates rule-based required skill overlap and missing keywords without machine learning.
+"""
+
+def calculate_ats_score(resume_skills: list[str], job_required_skills: list[str]) -> dict:
+    """
+    Calculate rule-based ATS match score and missing keywords.
+    
+    :param resume_skills: List of skill strings extracted from candidate resume.
+    :param job_required_skills: List of required skill strings for the target job.
+    :return: Dictionary containing match_score, missing_keywords, and generated_by tag.
+    """
+    if not job_required_skills:
+        # Edge case: Job has no required skills listed
+        return {
+            "match_score": 100.0,
+            "missing_keywords": [],
+            "generated_by": "heuristic-v0"
+        }
+
+    # Normalize and deduplicate job required skills preserving original casing of first appearance
+    seen_job_skills = set()
+    unique_job_skills = []
+    for skill in job_required_skills:
+        if skill and isinstance(skill, str):
+            s_clean = skill.strip()
+            s_lower = s_clean.lower()
+            if s_clean and s_lower not in seen_job_skills:
+                seen_job_skills.add(s_lower)
+                unique_job_skills.append(s_clean)
+
+    if not unique_job_skills:
+        return {
+            "match_score": 100.0,
+            "missing_keywords": [],
+            "generated_by": "heuristic-v0"
+        }
+
+    # Normalize resume skills for case-insensitive lookup
+    resume_skills_lower = {s.strip().lower() for s in resume_skills if s and isinstance(s, str)}
+
+    matched_skills = []
+    missing_keywords = []
+
+    for req_clean in unique_job_skills:
+        if req_clean.lower() in resume_skills_lower:
+            matched_skills.append(req_clean)
+        else:
+            missing_keywords.append(req_clean)
+
+    total_required = len(unique_job_skills)
+    score = round((len(matched_skills) / total_required) * 100, 2)
+    if score == int(score):
+        score = float(int(score))
+
+    return {
+        "match_score": score,
+        "missing_keywords": missing_keywords,
+        "generated_by": "heuristic-v0"
+    }
+
+
+
+
+
+# Reference vocabulary used only for the job-agnostic heuristic score.
+# Mirrors src/skills.py's CONTROLLED_SKILLS.
+REFERENCE_SKILLS = [
+    "Python", "SQL", "Git", "Machine Learning", "Deep Learning", "PyTorch",
+    "TensorFlow", "AWS", "Docker", "Java", "React", "Node.js", "Excel",
+    "Power BI", "Tableau", "Linux", "Pandas", "NumPy", "Scikit-learn",
+    "C++", "C#", "HTML", "CSS", "JavaScript", "TypeScript", "REST API",
+    "Flask", "Django", "Communication", "Azure", "Cyber Security", "NLP",
+    "Computer Vision", "Spark", "Hadoop", "Data Analysis", "Data Engineering",
+    "Kubernetes", "Agile",
+]
+
+CORE_SKILLS = ["Python", "SQL", "Java", "JavaScript", "React", "AWS", "Docker"]
+
+
+def calculate_generic_resume_score(resume_skills: list[str]) -> dict:
+    """
+    Rule-based, job-agnostic resume quality score.
+    Used right after upload, before any specific job is selected.
+    """
+    detected = [s for s in (resume_skills or []) if s and isinstance(s, str)]
+    detected_lower = {s.lower() for s in detected}
+
+    missing_skills = [s for s in REFERENCE_SKILLS if s.lower() not in detected_lower]
+
+    ats_score = round((len(detected) / len(REFERENCE_SKILLS)) * 100)
+    ats_score = min(100, ats_score)
+
+    core_hits = sum(1 for s in CORE_SKILLS if s.lower() in detected_lower)
+    job_match = round(ats_score * 0.7 + (core_hits / len(CORE_SKILLS)) * 30)
+    job_match = min(100, job_match)
+
+    return {
+        "ats_score": float(ats_score),
+        "job_match": float(job_match),
+        "detected_skills": detected,
+        "missing_skills": missing_skills[:12],
+        "missing_keywords": missing_skills[:8],
+        "score_breakdown": {
+            "keywordMatch": float(ats_score),
+            "formattingScore": 75.0,
+            "experienceRelevance": float(job_match),
+            "skillsDepth": float(ats_score),
+        },
+        "suggestions": [
+            {
+                "title": f"Add {skill}",
+                "detail": f"\"{skill}\" is commonly requested but wasn't detected in your resume.",
+                "impact": "medium",
+            }
+            for skill in missing_skills[:3]
+        ],
+        "generated_by": "heuristic-v0",
+    }
+    
+    
+if __name__ == "__main__":
+    print("=== SwipeX ATS Scoring Module (src/ats.py) ===")
+    sample_resume_skills = ["Python", "SQL", "Git", "REST API"]
+    sample_job_skills = ["Python", "SQL", "AWS", "Docker", "REST API"]
+    res = calculate_ats_score(sample_resume_skills, sample_job_skills)
+    print(f"Candidate Skills: {sample_resume_skills}")
+    print(f"Required Job Skills: {sample_job_skills}")
+    print(f"Match Score: {res['match_score']}%")
+    print(f"Missing Keywords: {res['missing_keywords']}")
+    print(f"Generated By: {res['generated_by']}")

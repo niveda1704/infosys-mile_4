@@ -1,0 +1,80 @@
+# Whole stack on one machine:   cp .env.example .env   (edit the secrets)   docker compose up --build
+# Open http://localhost:8080  (frontend)  -  API gateway on http://localhost:5000
+x-common: &common
+  env_file: .env
+  restart: unless-stopped
+  environment: &env
+    DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-swipex}
+    AUTH_SERVICE_URL: http://auth:5000
+    JOB_SERVICE_URL: http://job:5000
+    RESUME_SERVICE_URL: http://resume:5000
+    AI_SERVICE_URL: http://ai:8000
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-swipex}
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      retries: 20
+
+  tools:                      # create tables + seed jobs once, then exit
+    build: { context: ., dockerfile: deploy/Dockerfile.tools }
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-swipex}
+    depends_on: { db: { condition: service_healthy } }
+    restart: "no"
+
+  auth:
+    <<: *common
+    build: { context: ., dockerfile: deploy/Dockerfile.flask, args: { SERVICE_DIR: backend_jayashree/services/auth-service } }
+    depends_on: { tools: { condition: service_completed_successfully } }
+
+  job:
+    <<: *common
+    build: { context: ., dockerfile: deploy/Dockerfile.flask, args: { SERVICE_DIR: backend_jayashree/services/job-service } }
+    depends_on: { tools: { condition: service_completed_successfully } }
+
+  resume:
+    <<: *common
+    build: { context: ., dockerfile: deploy/Dockerfile.flask, args: { SERVICE_DIR: backend_jayashree/services/resume-service } }
+    volumes: [resume_uploads:/app/uploads]
+    depends_on: { tools: { condition: service_completed_successfully } }
+
+  ai:
+    <<: *common
+    build: { context: ., dockerfile: deploy/Dockerfile.ai }
+    environment:
+      <<: *env
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-swipex}
+    volumes: [hf_models:/models]
+    depends_on: { tools: { condition: service_completed_successfully } }
+
+  gateway:
+    <<: *common
+    build: { context: ., dockerfile: deploy/Dockerfile.flask, args: { SERVICE_DIR: backend_jayashree/gateway, APP_MODULE: "app:app" } }
+    environment:
+      <<: *env
+      TRUST_PROXY: "1"
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080,http://127.0.0.1:8080,http://localhost:3000}
+    ports: ["5000:5000"]
+    depends_on: [auth, job, resume, ai]
+
+  frontend:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile.frontend
+      args: { VITE_API_BASE_URL: "${PUBLIC_API_URL:-http://localhost:5000/api/v1}" }
+    ports: ["8080:80"]
+    depends_on: [gateway]
+
+volumes:
+  pgdata:
+  resume_uploads:
+  hf_models:

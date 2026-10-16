@@ -1,0 +1,16 @@
+# One-shot job: create tables for every service and seed jobs/companies into the shared Postgres.
+# init_db.py imports each Flask service's models, so this image carries the backend code and its
+# dependencies (but not torch / sentence-transformers - not needed for table creation).
+FROM python:3.12-slim
+ENV PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1
+WORKDIR /app
+COPY backend_jayashree/services/auth-service/requirements.txt  /tmp/req-auth.txt
+COPY backend_jayashree/services/job-service/requirements.txt   /tmp/req-job.txt
+COPY backend_jayashree/services/resume-service/requirements.txt /tmp/req-resume.txt
+COPY artificial_intelligence_meghana/requirements.txt          /tmp/req-ai.txt
+RUN grep -vi sentence-transformers /tmp/req-ai.txt > /tmp/req-ai-lite.txt \
+ && pip install -r /tmp/req-auth.txt -r /tmp/req-job.txt -r /tmp/req-resume.txt -r /tmp/req-ai-lite.txt
+COPY scripts/ ./scripts/
+COPY backend_jayashree/ ./backend_jayashree/
+COPY artificial_intelligence_meghana/ ./artificial_intelligence_meghana/
+CMD ["sh", "-c", "python scripts/init_db.py && python scripts/seed_jobs.py"]
