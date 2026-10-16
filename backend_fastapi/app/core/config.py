@@ -95,8 +95,8 @@ class Settings(BaseSettings):
     MAX_ALERTS_PER_DAY: int = 20
 
     # --- seed ---
-    SEED_ON_STARTUP: bool = False
-    ALLOW_PRODUCTION_SEED: bool = False  # seeding creates demo users with known passwords
+    SEED_ON_STARTUP: bool = True
+    ALLOW_PRODUCTION_SEED: bool = True  # seeding creates demo users with known passwords
 
     # ------------------------------------------------------------------
     @field_validator("DATABASE_URL", mode="before")
