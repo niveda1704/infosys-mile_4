@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 from typing import Generic, TypeVar
-
-from pydantic import BaseModel, ConfigDict, Field
+from typing_extensions import Self
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 T = TypeVar("T")
 
@@ -16,6 +16,13 @@ class Page(BaseModel, Generic[T]):
     page: int = Field(ge=1)
     page_size: int = Field(ge=1)
     pages: int = Field(ge=0)
+    jobs: list[T] | None = None
+
+    @model_validator(mode="after")
+    def populate_jobs(self) -> Self:
+        if self.jobs is None:
+            self.jobs = self.items
+        return self
 
 
 class ErrorBody(BaseModel):

@@ -293,6 +293,10 @@ export function DiscoverPage() {
       const jobs =
         Array.isArray(response?.jobs)
           ? response.jobs
+          : Array.isArray(response?.items)
+          ? response.items
+          : Array.isArray(response)
+          ? response
           : [];
 
       setAllJobs(jobs);

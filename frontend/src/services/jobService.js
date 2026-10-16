@@ -57,16 +57,15 @@ export const jobService = {
   // ==========================================================
 
   getJobs: async (params = {}) => {
-
-    const response =
-      await jobApi.get(
-        "/jobs/",
-        {
-          params,
-        }
-      );
-
-    return response.data;
+    const queryParams = { page_size: 50, ...params };
+    const response = await jobApi.get("/jobs/", {
+      params: queryParams,
+    });
+    const list =
+      response.data?.jobs ||
+      response.data?.items ||
+      (Array.isArray(response.data) ? response.data : []);
+    return { ...response.data, jobs: list, items: list };
   },
 
 
