@@ -261,8 +261,8 @@ async def list_my_jobs(
 
 @router.get("/applications", summary="My applications alias")
 async def list_jobs_applications(
+    pagination: PaginationDep,
     db: AsyncSession = Depends(get_db),
-    pagination: PaginationDep = Depends(),
     status_filter: str | None = Query(default=None, alias="status"),
     current_user: OptionalUser = None,
 ):
@@ -290,8 +290,8 @@ async def list_jobs_applications(
 
 @router.get("/saved", summary="My saved jobs alias")
 async def list_jobs_saved(
+    pagination: PaginationDep,
     db: AsyncSession = Depends(get_db),
-    pagination: PaginationDep = Depends(),
     current_user: OptionalUser = None,
 ):
     from app.services.swipe_service import SwipeService
@@ -316,8 +316,8 @@ async def list_jobs_saved(
 
 @router.get("/swipes", summary="My swipe history alias")
 async def list_jobs_swipes(
+    pagination: PaginationDep,
     db: AsyncSession = Depends(get_db),
-    pagination: PaginationDep = Depends(),
     current_user: OptionalUser = None,
 ):
     from app.services.swipe_service import SwipeService
