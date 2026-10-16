@@ -48,7 +48,7 @@ ai_router = APIRouter(prefix="/ai", tags=["ai"])
 @ai_router.get("/resume/{resume_id}/analysis")
 async def ai_resume_analysis(
     resume_id: str,
-    user: Annotated[User, Depends(require_job_seeker)],
+    user: Annotated[User, Depends(require_role(UserRole.job_seeker, UserRole.admin))],
     db: AsyncSession = Depends(get_db),
     mode: str = Query("hybrid"),
 ):

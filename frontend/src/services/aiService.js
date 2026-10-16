@@ -13,9 +13,10 @@ export const aiService = {
     if (!file) throw new Error("Resume file is required.");
     const form = new FormData();
     form.append("file", file);
+    // Note: Do NOT manually set "Content-Type": "multipart/form-data";
+    // Axios & the browser must automatically include the multipart boundary delimiter.
     const { data } = await http.post("/resumes/upload", form, {
-      headers: { "Content-Type": "multipart/form-data" },
-      timeout: 120000,
+      timeout: 60000,
     });
     const resumeId = data.resume_id || data.id || data.resume?.id || data.resume?.external_resume_id;
     const skills = data.skills || data.parsed_skills || data.resume?.skills || [];
@@ -42,10 +43,16 @@ export const aiService = {
   // Job-agnostic ATS analysis of one resume (uuid or numeric id)
   getResumeAnalysis: async (resumeRef, mode = "hybrid") => {
     try {
-      const { data } = await http.get(`/ai/resume/${resumeRef}/analysis`, { params: { mode } });
+      const { data } = await http.get(`/ai/resume/${resumeRef}/analysis`, {
+        params: { mode },
+        timeout: 20000,
+      });
       return data;
     } catch {
-      const { data } = await http.get(`/resumes/${resumeRef}/analysis`, { params: { mode } });
+      const { data } = await http.get(`/resumes/${resumeRef}/analysis`, {
+        params: { mode },
+        timeout: 20000,
+      });
       return data;
     }
   },
