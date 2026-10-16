@@ -615,8 +615,8 @@ export const INITIAL_JOBS = [
 
 export const INITIAL_USER = {
   id: "user-1",
-  name: "Ashif Siddique",
-  email: "siddiqueashif0786@gmail.com",
+  name: "Niveda Sree",
+  email: "nivedasree1704@gmail.com",
   role: "Aspiring AI & Software Engineer",
   avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=256&auto=format&fit=crop&q=80",
   location: "Bangalore, India",

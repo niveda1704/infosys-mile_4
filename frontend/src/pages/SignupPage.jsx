@@ -509,7 +509,7 @@ export function SignupPage() {
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
-                    placeholder="e.g. Pushkar Vishwakarma"
+                    placeholder="e.g. Niveda Sree"
                     required
                     autoComplete="name"
                     className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs sm:text-sm font-medium text-slate-900 dark:text-zinc-50 focus:bg-white dark:focus:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"

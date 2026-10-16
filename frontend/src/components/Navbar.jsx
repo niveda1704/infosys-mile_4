@@ -295,7 +295,7 @@ export function Navbar({ onMenuClick, sidebarOpen }) {
                     {/* Name & Role */}
                     <div className="hidden sm:flex flex-col text-left max-w-32.5 md:max-w-37.5 leading-tight">
                       <span className="truncate text-xs font-bold text-slate-900 dark:text-zinc-50">
-                        {user?.name || "ashif.siddique"}
+                        {user?.name || "Niveda Sree"}
                       </span>
                       <span className="truncate text-[10px] font-medium text-slate-400 mt-0.5">
                         {user?.role || "Full Stack Developer"}
