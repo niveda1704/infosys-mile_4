@@ -157,7 +157,7 @@ export function Sidebar({
 
       <aside
         className={`fixed lg:sticky top-0 lg:top-16 left-0 z-50 lg:z-30 h-screen lg:h-[calc(100vh-4rem)] bg-white dark:bg-zinc-900 border-r border-slate-200/80 dark:border-zinc-800/80 flex flex-col transition-all duration-300 ease-in-out select-none ${
-          collapsed ? "lg:w-[72px]" : "lg:w-64"
+          collapsed ? "lg:w-18" : "lg:w-64"
         } ${
           mobileOpen
             ? "translate-x-0 w-72 shadow-2xl lg:shadow-none"
@@ -167,7 +167,7 @@ export function Sidebar({
         {/* Mobile Header */}
         <div className="lg:hidden flex items-center justify-between px-4 h-16 border-b border-slate-100 dark:border-zinc-800">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-brand-600 to-amber-500 text-white flex items-center justify-center font-black text-xs shadow-xs">
+            <div className="w-8 h-8 rounded-xl bg-linear-to-tr from-brand-600 to-amber-500 text-white flex items-center justify-center font-black text-xs shadow-xs">
               SX
             </div>
             <span className="font-extrabold text-sm text-slate-900 dark:text-zinc-50 tracking-tight">

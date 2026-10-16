@@ -155,7 +155,7 @@ export function Navbar({ onMenuClick, sidebarOpen }) {
               to="/"
               className="group flex items-center gap-2.5 outline-none rounded-xl focus-visible:ring-2 focus-visible:ring-brand-500"
             >
-              <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-brand-600 to-amber-500 text-white font-extrabold text-sm sm:text-base tracking-wider shadow-sm shadow-brand-500/20 transition-transform group-hover:scale-105">
+              <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-linear-to-tr from-brand-600 to-amber-500 text-white font-extrabold text-sm sm:text-base tracking-wider shadow-sm shadow-brand-500/20 transition-transform group-hover:scale-105">
                 SX
               </div>
 
@@ -293,7 +293,7 @@ export function Navbar({ onMenuClick, sidebarOpen }) {
                     </div>
 
                     {/* Name & Role */}
-                    <div className="hidden sm:flex flex-col text-left max-w-[130px] md:max-w-[150px] leading-tight">
+                    <div className="hidden sm:flex flex-col text-left max-w-32.5 md:max-w-37.5 leading-tight">
                       <span className="truncate text-xs font-bold text-slate-900 dark:text-zinc-50">
                         {user?.name || "ashif.siddique"}
                       </span>
