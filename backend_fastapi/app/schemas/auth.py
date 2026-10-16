@@ -72,10 +72,18 @@ _PASSWORD_RE = re.compile(r"^(?=.*[A-Za-z])(?=.*\d).+$")
 
 
 class RegisterRequest(BaseModel):
-    email: EmailStr
+    email: str = Field(min_length=3, max_length=255)
     password: str = Field(min_length=8, max_length=128)
     full_name: str = Field(min_length=1, max_length=200)
     role: UserRole = UserRole.job_seeker
+
+    @field_validator("email")
+    @classmethod
+    def _check_email(cls, v: str) -> str:
+        v = v.strip().lower()
+        if "@" not in v or "." not in v.split("@")[-1]:
+            raise ValueError("Invalid email format")
+        return v
 
     @field_validator("password")
     @classmethod
@@ -97,8 +105,16 @@ class RegisterResponse(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    email: str = Field(min_length=3, max_length=255)
     password: str = Field(min_length=1, max_length=128)
+
+    @field_validator("email")
+    @classmethod
+    def _check_email(cls, v: str) -> str:
+        v = v.strip().lower()
+        if "@" not in v or "." not in v.split("@")[-1]:
+            raise ValueError("Invalid email format")
+        return v
 
 
 class RefreshRequest(BaseModel):

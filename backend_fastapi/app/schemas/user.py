@@ -13,7 +13,7 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
-    email: EmailStr
+    email: str = Field(min_length=3, max_length=255)
     password: str = Field(min_length=8, max_length=128)
     role: UserRole = UserRole.job_seeker
 
@@ -26,7 +26,7 @@ class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: str
-    email: EmailStr
+    email: str
     full_name: str
     role: UserRole
     is_active: bool
