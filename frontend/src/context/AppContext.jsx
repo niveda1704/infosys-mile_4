@@ -48,20 +48,28 @@ export function AppProvider({ children }) {
 
   // 1. User & Authentication
   const [user, setUser] = useState(() => {
-  const saved = localStorage.getItem(
-    STORAGE_KEYS.USER
-  );
-
-  return saved
-    ? JSON.parse(saved)
-    : null;
-});
+    const saved = localStorage.getItem(STORAGE_KEYS.USER);
+    let u = saved ? JSON.parse(saved) : null;
+    const token = localStorage.getItem("swipex_access_token");
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        if (!u) {
+          u = { id: payload.sub, user_id: payload.sub, role: (payload.role || "JOB_SEEKER").toUpperCase() };
+        } else {
+          u.id = u.id || payload.sub;
+          u.user_id = u.user_id || payload.sub;
+        }
+      } catch (e) {}
+    }
+    return u;
+  });
 
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-  return Boolean(
-    localStorage.getItem("swipex_access_token")
-  );
-});
+    return Boolean(
+      localStorage.getItem("swipex_access_token")
+    );
+  });
 
   // 2. Recruiter States
   const [recruiterProfile, setRecruiterProfile] = useState(() => {

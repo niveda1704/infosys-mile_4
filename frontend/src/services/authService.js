@@ -58,22 +58,37 @@ export const authService = {
     );
 
     const data = response.data;
-    if (data && data.access_token && !data.user) {
+    if (data && data.access_token) {
+      let sub = null;
       try {
-        const meRes = await authApi.get("/auth/me", {
-          headers: { Authorization: `Bearer ${data.access_token}` },
-        });
-        data.user = {
-          ...meRes.data,
-          email: credentials.email,
-          role: meRes.data.role || data.role || "job_seeker",
-        };
-      } catch {
-        data.user = {
-          email: credentials.email,
-          role: data.role || "job_seeker",
-          name: credentials.email.split("@")[0],
-        };
+        const payload = JSON.parse(atob(data.access_token.split(".")[1]));
+        sub = payload.sub;
+      } catch {}
+
+      if (!data.user) {
+        try {
+          const meRes = await authApi.get("/auth/me", {
+            headers: { Authorization: `Bearer ${data.access_token}` },
+          });
+          data.user = {
+            id: meRes.data.user_id || meRes.data.id || sub,
+            user_id: meRes.data.user_id || meRes.data.id || sub,
+            ...meRes.data,
+            email: credentials.email,
+            role: meRes.data.role || data.role || "job_seeker",
+          };
+        } catch {
+          data.user = {
+            id: sub,
+            user_id: sub,
+            email: credentials.email,
+            role: data.role || "job_seeker",
+            name: credentials.email.split("@")[0],
+          };
+        }
+      } else {
+        data.user.id = data.user.id || data.user.user_id || sub;
+        data.user.user_id = data.user.id;
       }
     }
 

@@ -98,11 +98,17 @@ export function RecommendationsPage() {
     setIsLoading(true);
     setError(null);
 
-    // Backend requires user_id — without it the request 422s before
-    // it even reaches the recommendation logic.
-    const userId = user?.id ?? user?.user_id;
+    const token = localStorage.getItem("swipex_access_token");
+    let userId = user?.id ?? user?.user_id ?? user?.userId;
 
-    if (!userId) {
+    if (!userId && token) {
+      try {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        userId = payload.sub;
+      } catch {}
+    }
+
+    if (!userId && !token) {
       setIsLoading(false);
       setError(
         "You need to be logged in to see personalized recommendations."
@@ -138,23 +144,55 @@ export function RecommendationsPage() {
 
       const recommendationList =
         recommendationData?.recommendations ||
+        recommendationData?.items ||
         recommendationData?.data ||
         (Array.isArray(recommendationData) ? recommendationData : []);
-      // Ids come straight from the shared database, so no title/company matching is needed.
+
       setRecommendations(
         Array.isArray(recommendationList)
-          ? recommendationList.map((recommendation) => ({
-              ...recommendation,
-              id: recommendation.id ?? recommendation.job_id,
-              title: recommendation.title ?? recommendation.job_title,
-              recommendationReason: Array.isArray(recommendation.reasons)
-                ? recommendation.reasons.join(". ")
-                : recommendation.reason,
-              matchingSkills:
-                recommendation.matchingSkills ?? recommendation.matching_skills ?? [],
-              missingSkills:
-                recommendation.missingSkills ?? recommendation.missing_skills ?? [],
-            }))
+          ? recommendationList.map((rec) => {
+              const job = rec.job || rec;
+              const companyName =
+                typeof (job.company || rec.company) === "object"
+                  ? (job.company?.name || rec.company?.name || "Company")
+                  : String(job.company || rec.company || "Company");
+              const title = job.title || rec.title || "Job Opportunity";
+              const skills = job.skills || rec.skills || [];
+              let salaryFormatted = job.salary || rec.salary;
+              if (!salaryFormatted && (job.salary_min || job.salary_max)) {
+                const minLakhs = job.salary_min ? (job.salary_min / 100000).toFixed(1).replace(".0", "") : null;
+                const maxLakhs = job.salary_max ? (job.salary_max / 100000).toFixed(1).replace(".0", "") : null;
+                if (minLakhs && maxLakhs) {
+                  salaryFormatted = `₹${minLakhs} - ${maxLakhs} LPA`;
+                } else if (maxLakhs) {
+                  salaryFormatted = `Up to ₹${maxLakhs} LPA`;
+                } else {
+                  salaryFormatted = `From ₹${minLakhs} LPA`;
+                }
+              }
+
+              return {
+                ...job,
+                ...rec,
+                id: String(rec.job_id || rec.id || job.id),
+                job_id: String(rec.job_id || rec.id || job.id),
+                title,
+                company: companyName,
+                companyName,
+                salary: salaryFormatted || "Competitive",
+                match_percentage: rec.match_percentage ?? rec.matchScore ?? 85,
+                matchPercentage: rec.match_percentage ?? rec.matchScore ?? 85,
+                recommendationReason: Array.isArray(rec.reason_tags)
+                  ? rec.reason_tags.join(" • ")
+                  : (rec.reason || "Recommended based on your profile"),
+                matchingSkills: rec.matchingSkills || rec.reason_tags || skills.slice(0, 3),
+                missingSkills: rec.missingSkills || [],
+                skills,
+                location: job.location || "Remote",
+                work_mode: job.work_mode || "Hybrid",
+                job_type: job.job_type || "Full Time",
+              };
+            })
           : []
       );
 
