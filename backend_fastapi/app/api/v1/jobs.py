@@ -314,6 +314,38 @@ async def list_jobs_saved(
     }
 
 
+@router.get("/swipes", summary="My swipe history alias")
+async def list_jobs_swipes(
+    db: AsyncSession = Depends(get_db),
+    pagination: PaginationDep = None,
+    current_user: Annotated[User, Depends(CurrentUser)] = None,
+):
+    from app.services.swipe_service import SwipeService
+    if not current_user:
+        return {"items": [], "swipes": [], "total": 0, "page": 1, "page_size": 100, "pages": 0}
+    items, total = await SwipeService(db).history(
+        user=current_user, page=pagination.page if pagination else 1, page_size=pagination.page_size if pagination else 100
+    )
+    pages = (total + 99) // 100 if total else 0
+    serialized = [
+        {
+            "job_id": i["job_id"],
+            "direction": i["direction"],
+            "action": i["action"],
+            "swiped_at": i["swiped_at"].isoformat() if hasattr(i["swiped_at"], "isoformat") else str(i["swiped_at"]),
+        }
+        for i in items
+    ]
+    return {
+        "items": serialized,
+        "swipes": serialized,
+        "total": total,
+        "page": 1,
+        "page_size": 100,
+        "pages": pages,
+    }
+
+
 @router.get("/{job_id}", response_model=JobResponse, summary="Get job detail")
 async def get_job(
     job_id: uuid.UUID,
@@ -321,6 +353,33 @@ async def get_job(
 ) -> JobResponse:
     job = await JobService(db).get(job_id)
     return _job_response(job)
+
+
+@router.post("/{job_id}/swipe", summary="Record a swipe on a job")
+async def swipe_job_by_id(
+    job_id: uuid.UUID,
+    payload: dict,
+    user: Annotated[User, Depends(require_job_seeker)],
+    db: AsyncSession = Depends(get_db),
+):
+    from app.services.swipe_service import SwipeService
+    from app.models.enums import SwipeAction, SwipeDirection
+    action_str = str(payload.get("action", "LEFT")).upper()
+    direction = SwipeDirection.right if action_str == "RIGHT" else SwipeDirection.left
+    action = SwipeAction.apply if direction == SwipeDirection.right else SwipeAction.skip
+    data = await SwipeService(db).record(
+        user=user,
+        job_id=job_id,
+        direction=direction,
+        action=action,
+    )
+    return {
+        "job_id": data["job_id"],
+        "direction": data["direction"],
+        "action": data["action"],
+        "swiped_at": data["swiped_at"],
+    }
+
 
 
 @router.get(

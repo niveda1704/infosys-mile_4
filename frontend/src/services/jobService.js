@@ -169,26 +169,31 @@ export const jobService = {
       );
     }
 
-    const response =
-      await jobApi.post(
-        `/jobs/${jobId}/swipe`,
-        {
-          action,
-        }
-      );
-
-    return response.data;
+    try {
+      const response = await jobApi.post(`/jobs/${jobId}/swipe`, { action });
+      return response.data;
+    } catch {
+      const direction = String(action).toLowerCase() === "right" ? "right" : "left";
+      const response = await jobApi.post("/swipes", { job_id: String(jobId), direction });
+      return response.data;
+    }
   },
 
 
   getSwipeHistory: async () => {
-
-    const response =
-      await jobApi.get(
-        "/jobs/swipes"
-      );
-
-    return response.data;
+    try {
+      const response = await jobApi.get("/jobs/swipes");
+      const list = response.data?.swipes || response.data?.items || (Array.isArray(response.data) ? response.data : []);
+      return { ...response.data, swipes: list, items: list };
+    } catch {
+      try {
+        const response = await jobApi.get("/swipes/history");
+        const list = response.data?.swipes || response.data?.items || (Array.isArray(response.data) ? response.data : []);
+        return { ...response.data, swipes: list, items: list };
+      } catch {
+        return { swipes: [], items: [] };
+      }
+    }
   },
 
 
