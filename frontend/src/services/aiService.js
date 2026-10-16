@@ -77,12 +77,33 @@ export const aiService = {
 
   // Re-ranked swipe deck (unseen jobs, best first). Call again after every swipe.
   getDeck: async ({ mode = "hybrid", limit = 40, timeout = 6000 } = {}) => {
+    const safeLimit = Math.min(Math.max(1, limit || 40), 100);
     try {
-      const { data } = await http.get("/ai/deck", { params: { mode, limit }, timeout });
-      return data;
+      const { data } = await http.get("/ai/deck", { params: { mode, limit: safeLimit }, timeout });
+      if (Array.isArray(data)) {
+        return {
+          order: data.map((d) => String(d.job_id || d.id)),
+          scores: Object.fromEntries(data.map((d) => [String(d.job_id || d.id), d.match_percentage || 0])),
+          items: data,
+        };
+      }
+      return {
+        order: (data?.order || []).map(String),
+        scores: data?.scores || {},
+        items: data?.items || [],
+      };
     } catch {
-      const { data } = await http.get("/recommendations", { params: { limit }, timeout });
-      return data;
+      try {
+        const { data } = await http.get("/recommendations", { params: { limit: safeLimit }, timeout });
+        const list = Array.isArray(data) ? data : (data?.items || []);
+        return {
+          order: list.map((d) => String(d.job_id || d.id)),
+          scores: Object.fromEntries(list.map((d) => [String(d.job_id || d.id), d.match_percentage || 0])),
+          items: list,
+        };
+      } catch {
+        return { order: [], scores: {}, items: [] };
+      }
     }
   },
 

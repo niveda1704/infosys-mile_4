@@ -8,7 +8,7 @@ from typing import Annotated
 from fastapi import APIRouter, BackgroundTasks, Depends, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import CurrentUser, PaginationDep, get_db, require_recruiter_or_admin
+from app.api.deps import CurrentUser, OptionalUser, PaginationDep, get_db, require_recruiter_or_admin
 from app.core.config import settings
 from app.models.enums import CompanyType, CompetitionLevel, ExperienceLevel, JobType, WorkMode
 from app.models.job import Job
@@ -262,9 +262,9 @@ async def list_my_jobs(
 @router.get("/applications", summary="My applications alias")
 async def list_jobs_applications(
     db: AsyncSession = Depends(get_db),
-    pagination: PaginationDep = None,
+    pagination: PaginationDep = Depends(),
     status_filter: str | None = Query(default=None, alias="status"),
-    current_user: Annotated[User, Depends(CurrentUser)] = None,
+    current_user: OptionalUser = None,
 ):
     from app.services.application_service import ApplicationService
     from app.api.v1.applications import _to_response
@@ -291,8 +291,8 @@ async def list_jobs_applications(
 @router.get("/saved", summary="My saved jobs alias")
 async def list_jobs_saved(
     db: AsyncSession = Depends(get_db),
-    pagination: PaginationDep = None,
-    current_user: Annotated[User, Depends(CurrentUser)] = None,
+    pagination: PaginationDep = Depends(),
+    current_user: OptionalUser = None,
 ):
     from app.services.swipe_service import SwipeService
     from app.schemas.swipe import SavedJobResponse
@@ -317,8 +317,8 @@ async def list_jobs_saved(
 @router.get("/swipes", summary="My swipe history alias")
 async def list_jobs_swipes(
     db: AsyncSession = Depends(get_db),
-    pagination: PaginationDep = None,
-    current_user: Annotated[User, Depends(CurrentUser)] = None,
+    pagination: PaginationDep = Depends(),
+    current_user: OptionalUser = None,
 ):
     from app.services.swipe_service import SwipeService
     if not current_user:

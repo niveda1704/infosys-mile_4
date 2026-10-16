@@ -56,6 +56,39 @@ async def get_current_user(
 CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
+async def get_optional_current_user(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    token: Annotated[str | None, Depends(oauth2_scheme)] = None,
+    authorization: Annotated[str | None, Header()] = None,
+) -> User | None:
+    raw = token
+    if not raw and authorization and authorization.lower().startswith("bearer "):
+        raw = authorization.split(" ", 1)[1].strip()
+    if not raw:
+        return None
+
+    try:
+        payload = decode_token(raw, expected_type="access")
+    except JWTError:
+        return None
+
+    sub = payload.get("sub")
+    if not sub:
+        return None
+    try:
+        user_id = uuid.UUID(sub)
+    except ValueError:
+        return None
+
+    user = await UserRepository(db).get_by_id(user_id)
+    if user is None or not user.is_active:
+        return None
+    return user
+
+
+OptionalUser = Annotated[User | None, Depends(get_optional_current_user)]
+
+
 def require_role(*roles: UserRole):
     allowed = {r.value if isinstance(r, UserRole) else str(r) for r in roles}
 

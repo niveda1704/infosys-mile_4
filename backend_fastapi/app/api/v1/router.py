@@ -59,7 +59,7 @@ async def ai_resume_analysis(
 async def ai_recommendations(
     user: Annotated[User, Depends(require_role(UserRole.job_seeker, UserRole.admin))],
     db: Annotated[AsyncSession, Depends(get_db)],
-    limit: int = Query(default=20, ge=1, le=50),
+    limit: int = Query(default=20, ge=1, le=100),
     user_id: str | None = Query(default=None),
 ):
     from app.api.v1.recommendations import get_recommendations
@@ -69,9 +69,16 @@ async def ai_recommendations(
 async def ai_deck(
     user: Annotated[User, Depends(require_role(UserRole.job_seeker, UserRole.admin))],
     db: Annotated[AsyncSession, Depends(get_db)],
-    limit: int = Query(default=30, ge=1, le=50),
+    limit: int = Query(default=30, ge=1, le=100),
 ):
     from app.api.v1.recommendations import get_recommendations
-    return await get_recommendations(user=user, db=db, limit=limit)
+    recs = await get_recommendations(user=user, db=db, limit=limit)
+    order = [str(r.job_id) for r in recs]
+    scores = {str(r.job_id): r.match_percentage for r in recs}
+    return {
+        "order": order,
+        "scores": scores,
+        "items": [r.model_dump() for r in recs],
+    }
 
 api_router.include_router(ai_router)

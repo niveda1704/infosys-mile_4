@@ -35,7 +35,7 @@ router = APIRouter(tags=["recommendations"])
 async def get_recommendations(
     user: Annotated[User, Depends(require_role(UserRole.job_seeker, UserRole.admin))],
     db: Annotated[AsyncSession, Depends(get_db)],
-    limit: int = Query(default=20, ge=1, le=50),
+    limit: int = Query(default=20, ge=1, le=100),
     user_id: str | None = Query(
         default=None,
         description="Admin-only: get recommendations for another user.",
