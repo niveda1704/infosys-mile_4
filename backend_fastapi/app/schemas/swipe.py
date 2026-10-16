@@ -37,3 +37,13 @@ class SwipeHistoryItem(BaseModel):
 class SavedJobResponse(BaseModel):
     job_id: str
     saved_at: datetime
+    id: str | None = None
+    title: str | None = None
+    job_title: str | None = None
+    company: str | None = None
+    company_name: str | None = None
+    location: str | None = None
+    salary: str | None = None
+    salary_min: int | None = None
+    salary_max: int | None = None
+    skills: list[str] = Field(default_factory=list)

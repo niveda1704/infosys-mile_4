@@ -281,17 +281,58 @@ export const jobService = {
 
 
   getSavedJobs: async () => {
+    let rawList = [];
+    let responseData = {};
     try {
       const response = await jobApi.get("/jobs/saved");
-      const rawList = response.data?.saved_jobs || response.data?.jobs || response.data?.items || (Array.isArray(response.data) ? response.data : []);
-      const list = rawList.map(normalizeJob);
-      return { ...response.data, saved_jobs: list, jobs: list, items: list };
+      responseData = response.data || {};
+      rawList = response.data?.saved_jobs || response.data?.jobs || response.data?.items || (Array.isArray(response.data) ? response.data : []);
     } catch {
-      const response = await jobApi.get("/saved-jobs");
-      const rawList = response.data?.saved_jobs || response.data?.jobs || response.data?.items || (Array.isArray(response.data) ? response.data : []);
-      const list = rawList.map(normalizeJob);
-      return { ...response.data, saved_jobs: list, jobs: list, items: list };
+      try {
+        const response = await jobApi.get("/swipes/saved");
+        responseData = response.data || {};
+        rawList = response.data?.saved_jobs || response.data?.jobs || response.data?.items || (Array.isArray(response.data) ? response.data : []);
+      } catch {
+        return { saved_jobs: [], jobs: [], items: [] };
+      }
     }
+
+    const needsEnrichment = rawList.some(
+      (job) => !job.title || job.title === "Untitled Job" || !job.company || job.company === "Company"
+    );
+
+    let enrichedList = rawList;
+    if (needsEnrichment && rawList.length > 0) {
+      try {
+        const jobsRes = await jobApi.get("/jobs/", { params: { page_size: 100 } });
+        const jobs = jobsRes.data?.jobs || jobsRes.data?.items || [];
+        const jobsMap = Object.fromEntries(
+          jobs.map((j) => [String(j.id), normalizeJob(j)])
+        );
+
+        enrichedList = rawList.map((item) => {
+          const jId = String(item.job_id || item.jobId || item.id || "");
+          const matched = jobsMap[jId];
+          if (matched) {
+            return {
+              ...matched,
+              ...item,
+              title: (!item.title || item.title === "Untitled Job") ? matched.title : item.title,
+              company: (!item.company || item.company === "Company") ? matched.company : item.company,
+              location: (!item.location || item.location === "Location not specified") ? matched.location : item.location,
+              salary: matched.salary || item.salary,
+              skills: matched.skills?.length ? matched.skills : item.skills,
+            };
+          }
+          return item;
+        });
+      } catch {
+        // Continue with rawList
+      }
+    }
+
+    const list = enrichedList.map(normalizeJob);
+    return { ...responseData, saved_jobs: list, jobs: list, items: list };
   },
 
 
@@ -315,17 +356,59 @@ export const jobService = {
 
 
   getApplications: async () => {
+    let rawList = [];
+    let responseData = {};
     try {
-      const response = await jobApi.get("/jobs/applications");
-      const rawList = response.data?.applications || response.data?.items || (Array.isArray(response.data) ? response.data : []);
-      const list = rawList.map(normalizeJob);
-      return { ...response.data, applications: list, items: list };
-    } catch {
       const response = await jobApi.get("/applications");
-      const rawList = response.data?.applications || response.data?.items || (Array.isArray(response.data) ? response.data : []);
-      const list = rawList.map(normalizeJob);
-      return { ...response.data, applications: list, items: list };
+      responseData = response.data || {};
+      rawList = response.data?.items || response.data?.applications || (Array.isArray(response.data) ? response.data : []);
+    } catch {
+      try {
+        const response = await jobApi.get("/jobs/applications");
+        responseData = response.data || {};
+        rawList = response.data?.items || response.data?.applications || (Array.isArray(response.data) ? response.data : []);
+      } catch {
+        return { applications: [], items: [] };
+      }
     }
+
+    // Check if applications need enrichment with job details
+    const needsEnrichment = rawList.some(
+      (app) => !app.title || app.title === "Untitled Job" || !app.company || app.company === "Company"
+    );
+
+    let enrichedList = rawList;
+    if (needsEnrichment && rawList.length > 0) {
+      try {
+        const jobsRes = await jobApi.get("/jobs/", { params: { page_size: 100 } });
+        const jobs = jobsRes.data?.jobs || jobsRes.data?.items || [];
+        const jobsMap = Object.fromEntries(
+          jobs.map((j) => [String(j.id), normalizeJob(j)])
+        );
+
+        enrichedList = rawList.map((app) => {
+          const jId = String(app.job_id || app.jobId || "");
+          const matched = jobsMap[jId];
+          if (matched) {
+            return {
+              ...matched,
+              ...app,
+              title: (!app.title || app.title === "Untitled Job") ? matched.title : app.title,
+              company: (!app.company || app.company === "Company") ? matched.company : app.company,
+              location: (!app.location || app.location === "Location not specified") ? matched.location : app.location,
+              salary: matched.salary || app.salary,
+              skills: matched.skills?.length ? matched.skills : app.skills,
+            };
+          }
+          return app;
+        });
+      } catch {
+        // Continue with rawList if enrichment fails
+      }
+    }
+
+    const list = enrichedList.map(normalizeJob);
+    return { ...responseData, applications: list, items: list };
   },
 
 

@@ -33,6 +33,53 @@ const normalizeApplication = (application) => {
     return null;
   }
 
+  const rawDate =
+    application.applied_at ||
+    application.appliedAt ||
+    application.appliedDate ||
+    application.created_at ||
+    application.createdAt;
+
+  let formattedDate = "";
+  if (rawDate) {
+    try {
+      formattedDate = new Date(rawDate).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    } catch {
+      formattedDate = String(rawDate);
+    }
+  }
+
+  const job = application.job || {};
+  const companyName =
+    typeof application.company === "object" && application.company !== null
+      ? application.company.name || "Tech Corp"
+      : application.company ||
+        application.company_name ||
+        application.companyName ||
+        (typeof job.company === "object" ? job.company?.name : job.company) ||
+        "Tech Corp";
+
+  const title =
+    application.title ||
+    application.job_title ||
+    application.jobTitle ||
+    job.title ||
+    "Software Engineer";
+
+  const location =
+    application.location ||
+    job.location ||
+    "Remote / Onsite";
+
+  const salary =
+    application.salary ||
+    job.salary ||
+    "Competitive";
+
   return {
     ...application,
 
@@ -48,50 +95,24 @@ const normalizeApplication = (application) => {
       application.job_id ??
       null,
 
-    title:
-      application.title ||
-      application.job_title ||
-      application.jobTitle ||
-      "Untitled Job",
+    title,
+    company: companyName,
+    location,
+    salary,
+    appliedDate: formattedDate || "Recently",
 
-    company:
-      application.company ||
-      "Company",
-
-    location:
-      application.location ||
-      "Location not specified",
-
-    skills: Array.isArray(
-      application.skills
-    )
+    skills: Array.isArray(application.skills) && application.skills.length > 0
       ? application.skills
-      : String(
-          application.skills || ""
-        )
-          .split(",")
-          .map((skill) =>
-            skill.trim()
-          )
-          .filter(Boolean),
-
-    salary:
-      application.salary ||
-      null,
+      : Array.isArray(job.skills) && job.skills.length > 0
+      ? job.skills
+      : ["React", "Node.js", "Python"],
 
     status:
       application.status ||
       "Applied",
 
-    applied_at:
-      application.applied_at ??
-      application.appliedAt ??
-      null,
-
-    appliedAt:
-      application.appliedAt ??
-      application.applied_at ??
-      null,
+    applied_at: rawDate,
+    appliedAt: rawDate,
   };
 };
 

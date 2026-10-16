@@ -948,7 +948,7 @@ export function SavedJobsPage() {
                             <span className="block text-[11px] font-bold text-brand-700 dark:text-brand-300 uppercase tracking-wider truncate">
 
                               {job.company ||
-                                "Company"}
+                                "Tech Company"}
 
                             </span>
 
@@ -956,7 +956,7 @@ export function SavedJobsPage() {
                             <h3 className="text-base font-bold text-slate-900 dark:text-zinc-50 line-clamp-1">
 
                               {job.title ||
-                                "Untitled Job"}
+                                "Job Opportunity"}
 
                             </h3>
 

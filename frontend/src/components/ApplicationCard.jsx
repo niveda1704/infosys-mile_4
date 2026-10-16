@@ -72,9 +72,17 @@ export function ApplicationCard({ application }) {
                   {typeof application.company === "object" ? (application.company?.name || "Company") : (application.company || "Company")}
                 </span>
                 <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-zinc-600" />
-                <span className="text-xs text-slate-500 dark:text-zinc-400">Applied on {application.appliedDate}</span>
+                <span className="text-xs text-slate-500 dark:text-zinc-400">
+                  {application.appliedDate
+                    ? `Applied on ${application.appliedDate}`
+                    : application.applied_at || application.created_at
+                    ? `Applied on ${new Date(application.applied_at || application.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
+                    : "Recently applied"}
+                </span>
               </div>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-zinc-50 mt-0.5">{application.title}</h3>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-zinc-50 mt-0.5">
+                {application.title || "Job Opportunity"}
+              </h3>
 
               <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-slate-500 dark:text-zinc-400 font-medium">
                 <span className="flex items-center gap-1">

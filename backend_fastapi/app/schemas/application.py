@@ -31,6 +31,17 @@ class ApplicationResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+    title: str | None = None
+    job_title: str | None = None
+    company: str | None = None
+    company_name: str | None = None
+    location: str | None = None
+    salary: str | None = None
+    salary_min: int | None = None
+    salary_max: int | None = None
+    skills: list[str] = Field(default_factory=list)
+    match_percentage: float | None = 85.0
+
 
 class ApplicationStatusEventResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)

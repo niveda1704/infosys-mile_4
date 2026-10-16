@@ -122,8 +122,75 @@ async def list_saved_jobs(
         user=user, page=pagination.page, page_size=pagination.page_size
     )
     pages = (total + pagination.page_size - 1) // pagination.page_size if pagination.page_size else 0
+
+    jobs_map = {}
+    job_ids = []
+    for i in items:
+        try:
+            job_ids.append(uuid.UUID(str(i["job_id"])))
+        except (ValueError, AttributeError):
+            pass
+
+    if job_ids:
+        from sqlalchemy import select
+        from sqlalchemy.orm import selectinload
+        from app.models.job import Job
+        try:
+            job_res = await db.execute(
+                select(Job).options(selectinload(Job.company)).where(Job.id.in_(job_ids))
+            )
+            jobs_map = {str(j.id): j for j in job_res.scalars().all()}
+        except Exception:
+            pass
+
+    results = []
+    for i in items:
+        jid = str(i["job_id"])
+        job = jobs_map.get(jid)
+        c_name = "Company"
+        title = "Job Opportunity"
+        location = "Remote / Onsite"
+        salary = "Competitive"
+        salary_min = None
+        salary_max = None
+        skills = []
+        if job:
+            title = job.title or title
+            location = job.location or location
+            salary_min = job.salary_min
+            salary_max = job.salary_max
+            skills = job.skills or job.required_skills or []
+            try:
+                if job.company:
+                    c_name = job.company.name
+            except Exception:
+                pass
+            if salary_min or salary_max:
+                if salary_min and salary_max:
+                    salary = f"₹{salary_min / 100000:.1f} - {salary_max / 100000:.1f} LPA".replace(".0", "")
+                elif salary_max:
+                    salary = f"Up to ₹{salary_max / 100000:.1f} LPA".replace(".0", "")
+                else:
+                    salary = f"From ₹{salary_min / 100000:.1f} LPA".replace(".0", "")
+        results.append(
+            SavedJobResponse(
+                id=jid,
+                job_id=jid,
+                saved_at=i["saved_at"],
+                title=title,
+                job_title=title,
+                company=c_name,
+                company_name=c_name,
+                location=location,
+                salary=salary,
+                salary_min=salary_min,
+                salary_max=salary_max,
+                skills=skills,
+            )
+        )
+
     return Page[SavedJobResponse](
-        items=[SavedJobResponse(job_id=i["job_id"], saved_at=i["saved_at"]) for i in items],
+        items=results,
         total=total,
         page=pagination.page,
         page_size=pagination.page_size,
