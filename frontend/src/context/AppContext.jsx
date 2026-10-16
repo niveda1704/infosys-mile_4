@@ -523,55 +523,18 @@ const login = useCallback(
           skills,
         });
 
-      if (!response.success) {
-        throw new Error(
-          response.message ||
-          "Registration failed"
-        );
-      }
+      // Auto login after registration
+      const loggedInUser = await login({
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password,
+      });
 
-      localStorage.setItem(
-        "swipex_access_token",
-        response.access_token
-      );
-
-      localStorage.setItem(
-        "swipex_refresh_token",
-        response.refresh_token
-      );
-
-      localStorage.setItem(
-        "swipex_user",
-        JSON.stringify(response.user)
-      );
-
-      resetUserScopedState();
-      setUser(response.user);
-      setIsAuthenticated(true);
-
-      const role =
-        String(response.user.role || "")
-          .toUpperCase();
-
-      if (role === "RECRUITER") {
-        setCurrentRole("recruiter");
-      } else if (role === "ADMIN") {
-        setCurrentRole("admin");
-      } else {
-        setCurrentRole("seeker");
-      }
-
-      addToast(
-        "Account created successfully!",
-        "success"
-      );
-      console.log("role from backend:", response.user.role);
-
-      return response.user;
+      return loggedInUser;
 
     } catch (error) {
 
       const message =
+        error.response?.data?.error?.message ||
         error.response?.data?.message ||
         error.message ||
         "Registration failed";
@@ -581,7 +544,7 @@ const login = useCallback(
       throw error;
     }
   },
-  [addToast, resetUserScopedState]
+  [login, addToast]
 );
 
   const logout = useCallback(

@@ -29,9 +29,19 @@ export const authService = {
   // =========================
 
   register: async (userData) => {
+    const roleStr = String(userData.role || "job_seeker").toLowerCase();
+    const normalizedRole = roleStr === "seeker" || roleStr === "job_seeker" ? "job_seeker" : roleStr;
+    const payload = {
+      ...userData,
+      email: userData.email,
+      password: userData.password,
+      full_name: userData.full_name || userData.name,
+      role: normalizedRole,
+    };
+
     const response = await authApi.post(
       "/auth/register",
-      userData
+      payload
     );
 
     return response.data;
@@ -47,7 +57,27 @@ export const authService = {
       credentials
     );
 
-    return response.data;
+    const data = response.data;
+    if (data && data.access_token && !data.user) {
+      try {
+        const meRes = await authApi.get("/auth/me", {
+          headers: { Authorization: `Bearer ${data.access_token}` },
+        });
+        data.user = {
+          ...meRes.data,
+          email: credentials.email,
+          role: meRes.data.role || data.role || "job_seeker",
+        };
+      } catch {
+        data.user = {
+          email: credentials.email,
+          role: data.role || "job_seeker",
+          name: credentials.email.split("@")[0],
+        };
+      }
+    }
+
+    return data;
   },
 
   // =========================
