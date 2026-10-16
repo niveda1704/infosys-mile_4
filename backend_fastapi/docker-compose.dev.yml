@@ -1,0 +1,81 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: swipex
+      POSTGRES_PASSWORD: swipex
+      POSTGRES_DB: swipex
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U swipex -d swipex"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  postgres_test:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: swipex
+      POSTGRES_PASSWORD: swipex
+      POSTGRES_DB: swipex_test
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgtestdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U swipex -d swipex_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    environment:
+      APP_NAME: SwipeX
+      ENVIRONMENT: dev
+      DEBUG: "true"
+      API_V1_PREFIX: /api/v1
+      DATABASE_URL: postgresql+asyncpg://swipex:swipex@postgres:5432/swipex
+      TEST_DATABASE_URL: postgresql+asyncpg://swipex:swipex@postgres_test:5432/swipex_test
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: dev-only-change-me-please-32-chars-min-xxxxx
+      CORS_ALLOW_ORIGINS: http://localhost:3000
+      STORAGE_BACKEND: local
+      LOCAL_STORAGE_PATH: /app/var/storage
+      AI_MODE: local
+      EMAIL_BACKEND: console
+      PUSH_BACKEND: noop
+      SEED_ON_STARTUP: "false"
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - storage:/app/var/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+      postgres_test:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  pgtestdata:
+  storage:
