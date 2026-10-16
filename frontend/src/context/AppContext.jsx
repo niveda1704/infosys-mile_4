@@ -937,7 +937,7 @@ const login = useCallback(
       const newNotif = {
         id: `notif-${Date.now()}`,
         title: "Application Submitted",
-        message: `Successfully applied to ${job.title} at ${job.company}.`,
+        message: `Successfully applied to ${job.title} at ${typeof job.company === "object" ? (job.company?.name || "Company") : (job.company || "Company")}.`,
         time: "Just now",
         read: false,
         type: "application",

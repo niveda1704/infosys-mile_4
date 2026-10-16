@@ -98,7 +98,7 @@ export function JobManagementPage() {
                   <td className="py-4 px-4 sm:px-6">
                     <div>
                       <p className="font-bold text-slate-900 dark:text-white text-sm">{job.title}</p>
-                      <p className="text-[11px] text-purple-600 dark:text-purple-400 font-medium">{job.company}</p>
+                      <p className="text-[11px] text-purple-600 dark:text-purple-400 font-medium">{typeof job.company === "object" ? (job.company?.name || "Company") : (job.company || "Company")}</p>
                     </div>
                   </td>
 
@@ -200,7 +200,7 @@ export function JobManagementPage() {
             <div>
               <h3 className="text-base font-bold text-slate-900 dark:text-white">Delete Job Requisition?</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                Permanently delete <span className="font-bold text-slate-900 dark:text-white">{deleteConfirmJob.title}</span> at {deleteConfirmJob.company}?
+                Permanently delete <span className="font-bold text-slate-900 dark:text-white">{deleteConfirmJob.title}</span> at {typeof deleteConfirmJob.company === "object" ? (deleteConfirmJob.company?.name || "Company") : (deleteConfirmJob.company || "Company")}?
               </p>
             </div>
 

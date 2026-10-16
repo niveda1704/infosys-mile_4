@@ -131,7 +131,7 @@ export function ApplicationOverviewPage() {
 
                   <td className="py-4 px-4">
                     <p className="text-slate-700 dark:text-slate-200 font-semibold">{app.jobTitle}</p>
-                    <p className="text-[11px] text-purple-600 dark:text-purple-400 font-medium">{app.company}</p>
+                    <p className="text-[11px] text-purple-600 dark:text-purple-400 font-medium">{typeof app.company === "object" ? (app.company?.name || "Company") : (app.company || "Company")}</p>
                   </td>
 
                   <td className="py-4 px-4 text-slate-500 dark:text-slate-400 font-medium">

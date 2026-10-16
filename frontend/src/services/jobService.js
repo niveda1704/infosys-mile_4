@@ -45,9 +45,59 @@ jobApi.interceptors.request.use(
 );
 
 
-// ============================================================
-// JOB SERVICE
-// ============================================================
+export const normalizeJob = (job) => {
+  if (!job) return job;
+  const companyName =
+    typeof job.company === "object" && job.company !== null
+      ? job.company.name || job.company.title || "Company"
+      : String(job.company || job.companyName || "Company");
+
+  const companyLogo =
+    job.logo ||
+    job.logo_url ||
+    (typeof job.company === "object" ? job.company.logo_url : null);
+
+  const companyType =
+    job.companyType ||
+    (typeof job.company === "object" ? job.company.company_type : null);
+
+  let salaryFormatted = job.salary;
+  if (!salaryFormatted && (job.salary_min || job.salary_max)) {
+    const minLakhs = job.salary_min ? (job.salary_min / 100000).toFixed(1).replace(".0", "") : null;
+    const maxLakhs = job.salary_max ? (job.salary_max / 100000).toFixed(1).replace(".0", "") : null;
+    if (minLakhs && maxLakhs) {
+      salaryFormatted = `₹${minLakhs} - ${maxLakhs} LPA`;
+    } else if (maxLakhs) {
+      salaryFormatted = `Up to ₹${maxLakhs} LPA`;
+    } else {
+      salaryFormatted = `From ₹${minLakhs} LPA`;
+    }
+  }
+
+  const experience =
+    job.experience ||
+    (job.min_experience_years !== undefined && job.min_experience_years !== null
+      ? (job.min_experience_years === 0 ? "Fresher (0 yrs)" : `${job.min_experience_years}+ yrs`)
+      : (job.experience_level || "Not specified"));
+
+  const workMode = job.work_mode || (job.is_remote ? "Remote" : "Onsite");
+  const employmentType = job.job_type || job.employment_type || "Full Time";
+
+  return {
+    ...job,
+    company: companyName,
+    companyName,
+    logo: companyLogo,
+    companyType,
+    salary: salaryFormatted || "Competitive",
+    experience,
+    experience_level: experience,
+    work_mode: workMode,
+    employment_type: employmentType,
+    job_type: employmentType,
+    rawCompany: job.company,
+  };
+};
 
 export const jobService = {
 
@@ -61,10 +111,11 @@ export const jobService = {
     const response = await jobApi.get("/jobs/", {
       params: queryParams,
     });
-    const list =
+    const rawList =
       response.data?.jobs ||
       response.data?.items ||
       (Array.isArray(response.data) ? response.data : []);
+    const list = rawList.map(normalizeJob);
     return { ...response.data, jobs: list, items: list };
   },
 
@@ -74,13 +125,8 @@ export const jobService = {
   // ==========================================================
 
   getJob: async (jobId) => {
-
-    const response =
-      await jobApi.get(
-        `/jobs/${jobId}`
-      );
-
-    return response.data;
+    const response = await jobApi.get(`/jobs/${jobId}`);
+    return normalizeJob(response.data);
   },
 
 
@@ -237,11 +283,13 @@ export const jobService = {
   getSavedJobs: async () => {
     try {
       const response = await jobApi.get("/jobs/saved");
-      const list = response.data?.saved_jobs || response.data?.jobs || response.data?.items || (Array.isArray(response.data) ? response.data : []);
+      const rawList = response.data?.saved_jobs || response.data?.jobs || response.data?.items || (Array.isArray(response.data) ? response.data : []);
+      const list = rawList.map(normalizeJob);
       return { ...response.data, saved_jobs: list, jobs: list, items: list };
     } catch {
       const response = await jobApi.get("/saved-jobs");
-      const list = response.data?.saved_jobs || response.data?.jobs || response.data?.items || (Array.isArray(response.data) ? response.data : []);
+      const rawList = response.data?.saved_jobs || response.data?.jobs || response.data?.items || (Array.isArray(response.data) ? response.data : []);
+      const list = rawList.map(normalizeJob);
       return { ...response.data, saved_jobs: list, jobs: list, items: list };
     }
   },
@@ -269,11 +317,13 @@ export const jobService = {
   getApplications: async () => {
     try {
       const response = await jobApi.get("/jobs/applications");
-      const list = response.data?.applications || response.data?.items || (Array.isArray(response.data) ? response.data : []);
+      const rawList = response.data?.applications || response.data?.items || (Array.isArray(response.data) ? response.data : []);
+      const list = rawList.map(normalizeJob);
       return { ...response.data, applications: list, items: list };
     } catch {
       const response = await jobApi.get("/applications");
-      const list = response.data?.applications || response.data?.items || (Array.isArray(response.data) ? response.data : []);
+      const rawList = response.data?.applications || response.data?.items || (Array.isArray(response.data) ? response.data : []);
+      const list = rawList.map(normalizeJob);
       return { ...response.data, applications: list, items: list };
     }
   },

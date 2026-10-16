@@ -35,7 +35,7 @@ export function ApplyModal() {
               {applyModalJob.logo ? (
                 <img
                   src={applyModalJob.logo}
-                  alt={applyModalJob.company}
+                  alt={typeof applyModalJob.company === "object" ? applyModalJob.company?.name : applyModalJob.company}
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -44,7 +44,7 @@ export function ApplyModal() {
             </div>
             <div>
               <h2 id="apply-modal-title" className="text-base font-bold text-slate-900 dark:text-zinc-50 line-clamp-1">
-                Apply to {applyModalJob.company}
+                Apply to {typeof applyModalJob.company === "object" ? (applyModalJob.company?.name || "Company") : (applyModalJob.company || "Company")}
               </h2>
               <p className="text-xs text-slate-500 dark:text-zinc-400 font-medium">{applyModalJob.title}</p>
             </div>

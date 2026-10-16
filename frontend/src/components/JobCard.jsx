@@ -69,6 +69,11 @@ export function JobCard({
   // (employment_type, experience_level, work_mode, etc.)
   // ============================================================
 
+  const companyName =
+    typeof job?.company === "object" && job?.company !== null
+      ? job.company.name || job.company.title || "Company"
+      : String(job?.company || job?.companyName || "Company");
+
   const skills = Array.isArray(job?.skills)
     ? job.skills
     : String(job?.skills || "")
@@ -261,7 +266,7 @@ export function JobCard({
   data-testid="job-card"
   tabIndex={0}
   role="region"
-  aria-label={`${job.title} at ${job.company}`}
+  aria-label={`${job.title} at ${companyName}`}
 >
       {/* ======================================================
           SWIPE OVERLAY INDICATORS
@@ -297,7 +302,7 @@ export function JobCard({
                 {job.logo ? (
                   <img
                     src={job.logo}
-                    alt={`${job.company || "Company"} logo`}
+                    alt={`${companyName} logo`}
                     className="w-full h-full object-cover rounded-lg lg:rounded-xl"
                   />
                 ) : (
@@ -308,7 +313,7 @@ export function JobCard({
               {/* Title & Company */}
               <div className="min-w-0 flex-1">
                 <p className="text-[11px] font-bold uppercase tracking-wider text-brand-700 dark:text-brand-300 truncate">
-                  {job.company || "Company"}
+                  {companyName}
                 </p>
                 <h2 data-testid="swipe-card-title" className="text-base sm:text-lg lg:text-xl font-extrabold text-slate-900 dark:text-zinc-50 leading-tight line-clamp-2 mt-0.5">
                   {job.title || "Job Opportunity"}

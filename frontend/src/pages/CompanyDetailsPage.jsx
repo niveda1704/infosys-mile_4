@@ -942,7 +942,7 @@ export function CompanyDetailsPage() {
                             </h4>
 
                             <p className="text-[10px] text-slate-500 dark:text-zinc-400 mt-1">
-                              {job.company}
+                              {typeof job.company === "object" ? (job.company?.name || "Company") : (job.company || "Company")}
                             </p>
 
                           </div>

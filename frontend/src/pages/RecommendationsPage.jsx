@@ -648,7 +648,7 @@ export function RecommendationsPage() {
                       {rec.logo ? (
                         <img
                           src={rec.logo}
-                          alt={rec.company}
+                          alt={typeof rec.company === "object" ? rec.company?.name : rec.company}
                           className="w-full h-full object-cover rounded-lg"
                         />
                       ) : (
@@ -660,7 +660,7 @@ export function RecommendationsPage() {
                     <div className="min-w-0">
 
                       <span className="text-xs font-bold text-brand-700 dark:text-brand-300 uppercase tracking-wider">
-                        {rec.company}
+                        {typeof rec.company === "object" ? (rec.company?.name || "Company") : (rec.company || "Company")}
                       </span>
 
                       <h3 className="text-lg font-bold text-slate-900 dark:text-zinc-50 leading-tight">

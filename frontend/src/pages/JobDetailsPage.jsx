@@ -229,7 +229,7 @@ export function JobDetailsPage() {
 
               <div>
                 <p className="text-sm font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wide mb-1">
-                  {job.company}
+                  {typeof job.company === "object" ? (job.company?.name || "Company") : (job.company || "Company")}
                 </p>
 
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-zinc-50 tracking-tight">

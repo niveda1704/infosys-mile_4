@@ -58,7 +58,7 @@ export function ApplicationCard({ application }) {
               {application.logo ? (
                 <img
                   src={application.logo}
-                  alt={application.company}
+                  alt={typeof application.company === "object" ? application.company?.name : application.company}
                   className="w-full h-full object-cover rounded-lg"
                 />
               ) : (
@@ -69,7 +69,7 @@ export function ApplicationCard({ application }) {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold text-brand-700 dark:text-brand-300 uppercase tracking-wider">
-                  {application.company}
+                  {typeof application.company === "object" ? (application.company?.name || "Company") : (application.company || "Company")}
                 </span>
                 <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-zinc-600" />
                 <span className="text-xs text-slate-500 dark:text-zinc-400">Applied on {application.appliedDate}</span>

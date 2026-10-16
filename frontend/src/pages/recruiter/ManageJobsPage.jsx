@@ -431,7 +431,7 @@ export function ManageJobsPage() {
 
                 {/* Company */}
                 <p className="text-xs font-semibold text-slate-700 dark:text-zinc-200">
-                  {job.company}
+                  {typeof job.company === "object" ? (job.company?.name || "Company") : (job.company || "Company")}
                 </p>
 
                 {/* Meta */}
@@ -637,7 +637,7 @@ export function ManageJobsPage() {
                 </h3>
 
                 <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
-                  {viewDetailsJob.company}
+                  {typeof viewDetailsJob.company === "object" ? (viewDetailsJob.company?.name || "Company") : (viewDetailsJob.company || "Company")}
                 </p>
               </div>
 
