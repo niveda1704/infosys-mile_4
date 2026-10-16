@@ -167,7 +167,7 @@ export function Sidebar({
         {/* Mobile Header */}
         <div className="lg:hidden flex items-center justify-between px-4 h-16 border-b border-slate-100 dark:border-zinc-800">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-brand-600 to-violet-500 text-white flex items-center justify-center font-black text-xs shadow-xs">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-brand-600 to-amber-500 text-white flex items-center justify-center font-black text-xs shadow-xs">
               SX
             </div>
             <span className="font-extrabold text-sm text-slate-900 dark:text-zinc-50 tracking-tight">

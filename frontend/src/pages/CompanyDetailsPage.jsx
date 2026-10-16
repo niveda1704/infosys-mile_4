@@ -552,7 +552,7 @@ export function CompanyDetailsPage() {
 
         {/* Banner */}
 
-        <div className="h-32 bg-gradient-to-r from-brand-600 to-violet-700 relative">
+        <div className="h-32 bg-gradient-to-r from-brand-600 to-amber-600 relative">
 
           <div className="absolute top-4 right-4">
 
